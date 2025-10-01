@@ -1,0 +1,47 @@
+[
+  {
+    "id": "1",
+    "title": "SQL FOR DATA ANALYSIS",
+    "category": "Data Science",
+    "description": "Introduction to SQL. SQL for Data Analysis",
+    "image": "/images/courses/data1.png",
+    "comments": 39,
+    "timeAgo": "6 mins ago"
+  },
+  {
+    "id": "2",
+    "title": "UNDERSTANDING GIT & GITHUB",
+    "category": "General",
+    "description": "Introduction to Git. Understanding GitHub as a tool.",
+    "image": "/images/courses/git1.png",
+    "comments": 0,
+    "timeAgo": "10 days ago"
+  },
+  {
+    "id": "3",
+    "title": "API PRODUCT MANAGEMENT",
+    "category": "Backend Development",
+    "description": "API Product Management.",
+    "image": "/images/courses/api1.png",
+    "comments": 9,
+    "timeAgo": "16 hours ago"
+  },
+  {
+    "id": "4",
+    "title": "JAVASCRIPT MASTERCLASS",
+    "category": "Frontend Development",
+    "description": "Understanding JavaScript basics.",
+    "image": "/images/courses/js1.png",
+    "comments": 0,
+    "timeAgo": "10 days ago"
+  },
+  {
+    "id": "5",
+    "title": "INTRODUCTION TO PROGRAMMING",
+    "category": "General",
+    "description": "Understanding the basics of programming.",
+    "image": "/images/courses/prg1.png",
+    "comments": 0,
+    "timeAgo": "10 days ago"
+  }
+]

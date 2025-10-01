@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">prolearn</string>
+    <string name="title_activity_main">prolearn</string>
+    <string name="package_name">com.progrowing.app</string>
+    <string name="custom_url_scheme">com.progrowing.app</string>
+</resources>
