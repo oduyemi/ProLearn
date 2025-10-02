@@ -75,7 +75,7 @@ export const LoginForm: React.FC = () => {
               variant="h5"
               sx={{
                 fontWeight: "bold",
-                color: "primary.main",
+                color: "#42113C",
                 position: "relative",
                 display: "inline-block",
                 pb: 1,

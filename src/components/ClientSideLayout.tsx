@@ -24,7 +24,9 @@ const ClientSideLayout = ({ children }: { children: React.ReactNode }) => {
         <Header />
       )}
       <main className="flex-1">{children}</main>
-      <Footer />
+      {!isUserRoute && (
+        <Header />
+      )}
     </>
   );
 };
