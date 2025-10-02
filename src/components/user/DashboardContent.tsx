@@ -152,7 +152,7 @@ export const DashboardContent: React.FC<DashboardContentProps> = ({
             variant="h5"
             sx={{
               fontWeight: "bold",
-              color: "primary.main",
+              color: "#42113C",
               mb: 3,
             }}
           >
