@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useState, ReactNode } from "react";
 import axios from "axios";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 
 export interface User {
@@ -58,7 +58,13 @@ const handleLogin = async (email: string, password: string): Promise<boolean> =>
       const { token } = response.data;
 
       // decode JWT to get user info
-      const decoded = jwt_decode<{ id: string; fname: string; lname: string; email: string; username: string }>(token);
+      const decoded = jwtDecode<{
+        id: string;
+        fname: string;
+        lname: string;
+        email: string;
+        username: string;
+      }>(token);      
 
       const userData: User = {
         id: decoded.id,
