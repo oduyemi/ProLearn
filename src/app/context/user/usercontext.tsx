@@ -1,8 +1,8 @@
 "use client";
+
 import React, { createContext, useState, ReactNode } from "react";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-
+import { jwtDecode, InvalidTokenError } from "jwt-decode";
 
 export interface User {
   id: string;
@@ -26,18 +26,28 @@ export interface UserContextType {
   flashMessage: FlashMessage | null;
   handleLogin: (email: string, password: string) => Promise<boolean>;
   handleLogout: () => Promise<void>;
-  handleChangePassword: (oldPassword: string, newPassword: string, confirmNewPassword: string) => Promise<void>;
+  handleChangePassword: (
+    oldPassword: string,
+    newPassword: string,
+    confirmNewPassword: string
+  ) => Promise<void>;
   handleUpdateProfile: (data: Partial<User>) => Promise<void>;
 }
 
-export const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export const UserContext = createContext<UserContextType | undefined>(
+  undefined
+);
 
 interface UserProviderProps {
   children: ReactNode;
 }
 
+
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const [flashMessage, setFlashMessage] = useState<FlashMessage | null>(null);
+  const [flashMessage, setFlashMessage] =
+    useState<FlashMessage | null>(null);
+
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("user");
@@ -46,25 +56,47 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return null;
   });
 
+  const handleLogin = async (
+    email: string,
+    password: string
+  ): Promise<boolean> => {
+    try {
+      const response = await axios.post(
+        "https://learnapi-pi.vercel.app/auth/login",
+        { email, password }
+      );
 
-const handleLogin = async (email: string, password: string): Promise<boolean> => {
-  try {
-    const response = await axios.post(
-      "https://learnapi-pi.vercel.app/auth/login",
-      { email, password }
-    );
+      if (response.status !== 200) return false;
 
-    if (response.status === 200) {
       const { token } = response.data;
 
-      // decode JWT to get user info
-      const decoded = jwtDecode<{
+      let decoded: {
         id: string;
         fname: string;
-        lname: string;
+        lname?: string;
         email: string;
-        username: string;
-      }>(token);      
+        username?: string;
+      };
+
+      try {
+        decoded = jwtDecode(token);
+        if (!decoded.id || !decoded.email || !decoded.fname) {
+          throw new InvalidTokenError("Missing required JWT claims");
+        }
+      } catch (err) {
+        if (err instanceof InvalidTokenError) {
+          setFlashMessage({
+            type: "error",
+            message: "Invalid or expired session. Please log in again.",
+          });
+        } else {
+          setFlashMessage({
+            type: "error",
+            message: "Authentication failed.",
+          });
+        }
+        return false;
+      }
 
       const userData: User = {
         id: decoded.id,
@@ -80,68 +112,90 @@ const handleLogin = async (email: string, password: string): Promise<boolean> =>
 
       setFlashMessage({
         type: "success",
-        message: `Login Successful. Welcome Back ${userData.fname}`,
+        message: `Login Successful. Welcome back ${userData.fname}`,
       });
 
       return true;
+    } catch (error: unknown) {
+      setFlashMessage({
+        type: "error",
+        message: axios.isAxiosError(error)
+          ? error.response?.data?.message || "Login failed."
+          : "Something went wrong.",
+      });
+      return false;
     }
-  } catch (error: unknown) {
-    setFlashMessage({
-      type: "error",
-      message: axios.isAxiosError(error)
-        ? error.response?.data?.message || "Login failed."
-        : "Something went wrong.",
-    });
-  }
-  return false;
-};
+  };
 
   const handleLogout = async (): Promise<void> => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    setFlashMessage({ type: "success", message: "Logged out successfully." });
+    setFlashMessage({
+      type: "success",
+      message: "Logged out successfully.",
+    });
   };
 
-
-  const handleChangePassword = async (oldPassword: string, newPassword: string, confirmNewPassword: string): Promise<void> => {
+  const handleChangePassword = async (
+    oldPassword: string,
+    newPassword: string,
+    confirmNewPassword: string
+  ): Promise<void> => {
     try {
       if (!user) {
-        setFlashMessage({ type: "error", message: "You must be logged in." });
+        setFlashMessage({
+          type: "error",
+          message: "You must be logged in.",
+        });
         return;
       }
 
       const token = localStorage.getItem("token");
+
       const response = await axios.put(
-        `https://learnapi-pi.vercel.app/auth/reset-password/${user?.id}`,
-        { oldPassword, newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+        `https://learnapi-pi.vercel.app/auth/reset-password`,
+        { oldPassword, newPassword, confirmNewPassword },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       setFlashMessage({
         type: response.status === 200 ? "success" : "error",
-        message: response.data.message || "Password update failed",
+        message: response.data.message || "Password update failed.",
       });
     } catch (error: unknown) {
       setFlashMessage({
         type: "error",
-        message: axios.isAxiosError(error) ? error.response?.data?.message || "Error changing password" : "Something went wrong",
+        message: axios.isAxiosError(error)
+          ? error.response?.data?.message || "Error changing password."
+          : "Something went wrong.",
       });
     }
   };
 
-  const handleUpdateProfile = async (data: Partial<User>): Promise<void> => {
+
+  const handleUpdateProfile = async (
+    data: Partial<User>
+  ): Promise<void> => {
     try {
       if (!user) {
-        setFlashMessage({ type: "error", message: "You must be logged in." });
+        setFlashMessage({
+          type: "error",
+          message: "You must be logged in.",
+        });
         return;
       }
 
       const token = localStorage.getItem("token");
-      const response = axios.put(
-        `https://learnapi-pi.vercel.app/auth/update`,
+
+      const response = await axios.put(
+        "https://learnapi-pi.vercel.app/auth/update",
         data,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       if (response.status === 200) {
@@ -149,20 +203,39 @@ const handleLogin = async (email: string, password: string): Promise<boolean> =>
         setUser(updatedUser);
         localStorage.setItem("user", JSON.stringify(updatedUser));
 
-        setFlashMessage({ type: "success", message: "Profile updated successfully." });
+        setFlashMessage({
+          type: "success",
+          message: "Profile updated successfully.",
+        });
       } else {
-        setFlashMessage({ type: "error", message: response.data.message || "Profile update failed" });
+        setFlashMessage({
+          type: "error",
+          message: response.data.message || "Profile update failed.",
+        });
       }
     } catch (error: unknown) {
       setFlashMessage({
         type: "error",
-        message: axios.isAxiosError(error) ? error.response?.data?.message || "Error updating profile" : "Something went wrong",
+        message: axios.isAxiosError(error)
+          ? error.response?.data?.message || "Error updating profile."
+          : "Something went wrong.",
       });
     }
   };
 
+
   return (
-    <UserContext.Provider value={{ user, setUser, flashMessage, handleLogin, handleLogout, handleChangePassword, handleUpdateProfile }}>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+        flashMessage,
+        handleLogin,
+        handleLogout,
+        handleChangePassword,
+        handleUpdateProfile,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
