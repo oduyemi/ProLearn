@@ -56,7 +56,7 @@ export const RegisterForm: React.FC = () => {
       }
 
       await axios.post(
-        "https://learnapi-pi.vercel.app/send/register",
+        "https://learnapi-pi.vercel.app/auth/register",
         formData,
         { headers: { "Content-Type": "application/json" } }
       );
