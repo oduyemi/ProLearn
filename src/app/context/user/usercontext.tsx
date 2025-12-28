@@ -47,14 +47,21 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [flashMessage, setFlashMessage] =
     useState<FlashMessage | null>(null);
-
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== "undefined") {
+    const [user, setUser] = useState<User | null>(() => {
+      if (typeof window === "undefined") return null;
       const storedUser = localStorage.getItem("user");
-      return storedUser ? (JSON.parse(storedUser) as User) : null;
-    }
-    return null;
-  });
+      if (!storedUser || storedUser === "undefined") {
+        localStorage.removeItem("user");
+        return null;
+      }
+    
+      try {
+        return JSON.parse(storedUser) as User;
+      } catch {
+        localStorage.removeItem("user");
+        return null;
+      }
+    });
 
   const handleLogin = async (
     email: string,
