@@ -1,6 +1,8 @@
 "use client";
 import React, { createContext, useState, ReactNode } from "react";
 import axios from "axios";
+import jwt_decode from "jwt-decode";
+
 
 export interface User {
   id: string;
@@ -44,68 +46,60 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return null;
   });
 
-  const handleLogin = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const response = await axios.post(
-        "https://learnapi-pi.vercel.app/auth/login",
-        { email, password } // no withCredentials
-      );
-  
-      if (response.status === 200) {
-        const { token, userSession } = response.data as {
-          token: string;
-          userSession: User;
-        };
-  
-        setUser(userSession);
-        localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userSession));
-  
-        setFlashMessage({
-          type: "success",
-          message: `Login Successful. Welcome Back ${userSession.fname}`,
-        });
-  
-        return true;
-      }
-  
-      setFlashMessage({ type: "error", message: "Invalid login credentials." });
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setFlashMessage({
-          type: "error",
-          message:
-            error.response?.data?.message || "Login failed.",
-        });
-      } else {
-        setFlashMessage({
-          type: "error",
-          message: "Something went wrong.",
-        });
-      }
-    }
-  
-    return false;
-  };
-  
 
+const handleLogin = async (email: string, password: string): Promise<boolean> => {
+  try {
+    const response = await axios.post(
+      "https://learnapi-pi.vercel.app/auth/login",
+      { email, password }
+    );
 
-  const handleLogout = async (): Promise<void> => {
-    try {
-      if (!user) return;
+    if (response.status === 200) {
+      const { token } = response.data;
 
-      await axios.post(`https://learnapi-pi.vercel.app/auth/logout/${user.id}`, {}, { withCredentials: true });
-      setUser(null);
-      localStorage.removeItem("user");
+      // decode JWT to get user info
+      const decoded = jwt_decode<{ id: string; fname: string; lname: string; email: string; username: string }>(token);
 
-      setFlashMessage({ type: "success", message: "Logged out successfully." });
-    } catch (error: unknown) {
+      const userData: User = {
+        id: decoded.id,
+        fname: decoded.fname,
+        lname: decoded.lname,
+        email: decoded.email,
+        username: decoded.username,
+      };
+
+      setUser(userData);
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
+
       setFlashMessage({
-        type: "error",
-        message: axios.isAxiosError(error) ? error.response?.data?.message || "Logout failed" : "Something went wrong",
+        type: "success",
+        message: `Login Successful. Welcome Back ${userData.fname}`,
       });
+
+      return true;
     }
-  };
+  } catch (error: unknown) {
+    setFlashMessage({
+      type: "error",
+      message: axios.isAxiosError(error)
+        ? error.response?.data?.message || "Login failed."
+        : "Something went wrong.",
+    });
+  }
+  return false;
+};
+
+  
+
+
+const handleLogout = async (): Promise<void> => {
+  setUser(null);
+  localStorage.removeItem("user");
+  localStorage.removeItem("token");
+  setFlashMessage({ type: "success", message: "Logged out successfully." });
+};
+
 
   // ---------------- CHANGE PASSWORD ----------------
   const handleChangePassword = async (oldPassword: string, newPassword: string, confirmNewPassword: string): Promise<void> => {
@@ -142,9 +136,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         return;
       }
 
-      const response = await axios.put(
-        `https://learnapi-pi.vercel.app/auth/update-user/${user.id}`,
+      const token = localStorage.getItem("token");
+      const response = axios.put(
+        `https://learnapi-pi.vercel.app/auth/update`,
         data,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.status === 200) {
