@@ -30,9 +30,11 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
         <Typography variant="h5" color="error">
           Course not found 😢
         </Typography>
-        <Button component={Link} href="/courses" sx={{ mt: 3 }} variant="outlined">
-          Back to Courses
-        </Button>
+        <Link href="/courses" passHref>
+          <CustomButton variant="outlined">
+            Back to Courses
+          </CustomButton>
+        </Link>
       </Box>
     );
   }
@@ -72,9 +74,11 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
               </CustomButton>{" "}
               </Box>
               <Box textAlign="center" mt={4}>
-                <CustomButton component={Link} href="/courses" variant="outlined">
-                  Back to Courses
-                </CustomButton>
+                <Link href="/courses" passHref>
+                  <CustomButton variant="outlined">
+                    Back to Courses
+                  </CustomButton>
+                </Link>
               </Box>
           </Box>
         </CardContent>
