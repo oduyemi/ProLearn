@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Image from "next/image";
 import {
   Box,
   List,
@@ -49,14 +48,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     >
       {/* Logo */}
       <Box display="flex" justifyContent="center" mb={2}>
-        <Image
-          src="/images/logo/logo.png"
-          alt="Logo"
-          width={150}
-          height={80}
-          priority
-          style={{ objectFit: "cover" }}
-        />
+      <img
+        src="/images/logo/logo.png"
+        alt="Logo"
+        width={150}
+        height={80}
+        style={{ objectFit: "cover" }}
+      />
       </Box>
 
       <Divider sx={{ mb: 2, borderColor: "rgba(255,255,255,0.2)" }} />

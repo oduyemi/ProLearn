@@ -4,12 +4,16 @@ import React, { createContext, useState, ReactNode } from "react";
 import axios from "axios";
 import { jwtDecode, InvalidTokenError } from "jwt-decode";
 
+/* =======================
+   Types
+======================= */
+
 export interface User {
-  id: string;
-  fname: string;
+  id: string; // MongoDB ObjectId
+  fname?: string;
   lname?: string;
   username?: string;
-  email: string;
+  email?: string;
   phone?: string;
   img?: string;
   createdAt?: string;
@@ -34,6 +38,9 @@ export interface UserContextType {
   handleUpdateProfile: (data: Partial<User>) => Promise<void>;
 }
 
+/* =======================
+   Context
+======================= */
 
 export const UserContext = createContext<UserContextType | undefined>(
   undefined
@@ -43,25 +50,39 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
+/* =======================
+   Provider
+======================= */
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [flashMessage, setFlashMessage] =
     useState<FlashMessage | null>(null);
-    const [user, setUser] = useState<User | null>(() => {
-      if (typeof window === "undefined") return null;
-      const storedUser = localStorage.getItem("user");
-      if (!storedUser || storedUser === "undefined") {
-        localStorage.removeItem("user");
-        return null;
-      }
-    
-      try {
-        return JSON.parse(storedUser) as User;
-      } catch {
-        localStorage.removeItem("user");
-        return null;
-      }
-    });
+
+  /* =======================
+     Safe localStorage hydration
+  ======================= */
+
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === "undefined") return null;
+
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser || storedUser === "undefined") {
+      localStorage.removeItem("user");
+      return null;
+    }
+
+    try {
+      return JSON.parse(storedUser) as User;
+    } catch {
+      localStorage.removeItem("user");
+      return null;
+    }
+  });
+
+  /* =======================
+     Login
+  ======================= */
 
   const handleLogin = async (
     email: string,
@@ -77,40 +98,26 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       const { token } = response.data;
 
-      let decoded: {
-        id: string;
-        fname: string;
-        lname?: string;
-        email: string;
-        username?: string;
-      };
+      /* ---- Decode JWT (ONLY sub is expected) ---- */
+      let decoded: { sub: string; type?: string };
 
       try {
         decoded = jwtDecode(token);
-        if (!decoded.id || !decoded.email || !decoded.fname) {
-          throw new InvalidTokenError("Missing required JWT claims");
+
+        if (!decoded.sub) {
+          throw new InvalidTokenError("Missing subject");
         }
       } catch (err) {
-        if (err instanceof InvalidTokenError) {
-          setFlashMessage({
-            type: "error",
-            message: "Invalid or expired session. Please log in again.",
-          });
-        } else {
-          setFlashMessage({
-            type: "error",
-            message: "Authentication failed.",
-          });
-        }
+        setFlashMessage({
+          type: "error",
+          message: "Invalid or expired session. Please log in again.",
+        });
         return false;
       }
 
+      /* ---- Minimal user state (ID only) ---- */
       const userData: User = {
-        id: decoded.id,
-        fname: decoded.fname,
-        lname: decoded.lname,
-        email: decoded.email,
-        username: decoded.username,
+        id: decoded.sub, // MongoDB ObjectId
       };
 
       setUser(userData);
@@ -119,7 +126,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       setFlashMessage({
         type: "success",
-        message: `Login Successful. Welcome back ${userData.fname}`,
+        message: "Login successful",
       });
 
       return true;
@@ -134,15 +141,24 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   };
 
+  /* =======================
+     Logout
+  ======================= */
+
   const handleLogout = async (): Promise<void> => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+
     setFlashMessage({
       type: "success",
       message: "Logged out successfully.",
     });
   };
+
+  /* =======================
+     Change Password
+  ======================= */
 
   const handleChangePassword = async (
     oldPassword: string,
@@ -161,7 +177,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const token = localStorage.getItem("token");
 
       const response = await axios.put(
-        `https://learnapi-pi.vercel.app/auth/reset-password`,
+        "https://learnapi-pi.vercel.app/auth/reset-password",
         { oldPassword, newPassword, confirmNewPassword },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -182,6 +198,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   };
 
+  /* =======================
+     Update Profile
+  ======================= */
 
   const handleUpdateProfile = async (
     data: Partial<User>
@@ -230,6 +249,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   };
 
+  /* =======================
+     Provider
+  ======================= */
 
   return (
     <UserContext.Provider
