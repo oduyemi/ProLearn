@@ -72,7 +72,7 @@ export default function CourseDetailPage({ params }: { params: { id: string } })
               </CustomButton>{" "}
               </Box>
               <Box textAlign="center" mt={4}>
-                <CustomButton component={Link} href="/courses" variant="outline">
+                <CustomButton component={Link} href="/courses" variant="outlined">
                   Back to Courses
                 </CustomButton>
               </Box>

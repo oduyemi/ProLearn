@@ -20,7 +20,10 @@ const formatDate = (dateString: string) => {
 };
 
 export const Profile: React.FC = () => {
-  const { user, handleLogout } = useContext(UserContext)!;
+  const { 
+    user, 
+    // handleLogout 
+  } = useContext(UserContext)!;
   const [flashMessage, setFlashMessage] = useState<{ type: string; message: string } | null>(null);
   const router = useRouter();
 

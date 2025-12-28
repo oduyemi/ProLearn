@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import {
   Box,
   List,
@@ -17,6 +18,7 @@ import {
   Logout as LogoutIcon,
 } from "@mui/icons-material";
 import { useRouter, usePathname } from "next/navigation";
+
 
 interface SidebarProps {
   onLogout: () => void;
@@ -47,11 +49,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     >
       {/* Logo */}
       <Box display="flex" justifyContent="center" mb={2}>
-        <img
+        <Image
           src="/images/logo/logo.png"
           alt="Logo"
           width={150}
           height={80}
+          priority
           style={{ objectFit: "cover" }}
         />
       </Box>

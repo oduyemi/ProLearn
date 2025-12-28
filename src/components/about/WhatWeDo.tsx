@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Box, Typography, Container } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 export const WhatWeDo: React.FC = () => {
   const features = [

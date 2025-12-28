@@ -8,37 +8,53 @@ import {
   Avatar,
   Paper,
   CircularProgress,
+  Alert,
 } from "@mui/material";
-import { UserContext } from "../../app/context/user/usercontext";
+import { UserContext, User } from "../../app/context/user/usercontext";
 import CustomButton from "@/components/elements/Button";
 import { useRouter } from "next/navigation";
 
 const API_BASE = "https://learnapi-pi.vercel.app";
 
+// Extend User type to allow File uploads for form handling
+type EditableUser = User & { [key: string]: string | File | undefined };
+
 export const EditProfile: React.FC = () => {
-  const { user } = useContext(UserContext)!;
-  const [userDetails, setUserDetails] = useState<any>(user || {});
+  const { user, setUser, flashMessage, handleLogout } = useContext(UserContext)!;
+  const [userDetails, setUserDetails] = useState<EditableUser>(
+    user ? { ...user } : ({} as EditableUser)
+  );
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const router = useRouter();
 
+  // Redirect if not logged in
   useEffect(() => {
     if (!user) {
       router.push("/login");
     }
   }, [user, router]);
 
+  // Update preview when user.img changes
+  useEffect(() => {
+    if (user?.img) setPreview(user.img);
+  }, [user]);
+
+  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files } = e.target;
-    if (files) {
-      setUserDetails((prev: any) => ({ ...prev, [name]: files[0] }));
+
+    if (files && files[0]) {
+      setUserDetails((prev) => ({ ...prev, [name]: files[0] }));
       setPreview(URL.createObjectURL(files[0]));
     } else {
-      setUserDetails((prev: any) => ({ ...prev, [name]: value }));
+      setUserDetails((prev) => ({ ...prev, [name]: value }));
     }
   };
 
+  // Submit updated profile
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -47,17 +63,25 @@ export const EditProfile: React.FC = () => {
       setLoading(true);
 
       const formData = new FormData();
-      Object.keys(userDetails).forEach((key) => {
-        formData.append(key, userDetails[key]);
+
+      // Only append fields that have values
+      Object.entries(userDetails).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          formData.append(key, value);
+        }
       });
 
-      await axios.put(`${API_BASE}/users/${user.id}`, formData, {
+      const response = await axios.put(`${API_BASE}/users/${user.id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("Profile updated successfully!");
+      const updatedUser: User = { ...user, ...response.data };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      setMessage({ type: "success", text: "Profile updated successfully!" });
     } catch (err: any) {
-      alert(err.response?.data?.message || "Update failed");
+      setMessage({ type: "error", text: err.response?.data?.message || "Update failed" });
     } finally {
       setLoading(false);
     }
@@ -66,7 +90,7 @@ export const EditProfile: React.FC = () => {
   return (
     <Box
       sx={{
-        minHeight: "40vh",
+        minHeight: "60vh",
         bgcolor: "grey.100",
         display: "flex",
         alignItems: "center",
@@ -94,12 +118,14 @@ export const EditProfile: React.FC = () => {
           Edit Profile
         </Typography>
 
+        {message && <Alert severity={message.type} sx={{ mb: 3 }}>{message.text}</Alert>}
+
         <form onSubmit={handleSubmit}>
           <Box display="flex" flexDirection="column" gap={3}>
             {/* Avatar Preview */}
             <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
               <Avatar
-                src={preview || userDetails.img || "/images/photos/avatar.png"}
+                src={preview || "/images/photos/avatar.png"}
                 alt="Profile"
                 sx={{ width: 100, height: 100, boxShadow: 2 }}
               />
@@ -112,7 +138,7 @@ export const EditProfile: React.FC = () => {
                 id="upload-avatar"
               />
               <label htmlFor="upload-avatar">
-                <CustomButton component="span" variant="outline" size="small">
+                <CustomButton component="span" variant="outlined" size="small">
                   Change Photo
                 </CustomButton>
               </label>
@@ -145,24 +171,18 @@ export const EditProfile: React.FC = () => {
             />
 
             {/* Save Button */}
-            <CustomButton
-              type="submit"
-              disabled={loading}
-              // sx={{
-              //   py: 1.4,
-              //   fontSize: "1rem",
-              //   fontWeight: 600,
-              //   background:
-              //     "linear-gradient(90deg, #6A1B9A 0%, #1E3A8A 100%)",
-              //   color: "white",
-              //   "&:hover": {
-              //     background:
-              //       "linear-gradient(90deg, #1E3A8A 0%, #6A1B9A 100%)",
-              //     boxShadow: "0 6px 14px rgba(0,0,0,0.25)",
-              //   },
-              // }}
-            >
+            <CustomButton type="submit" disabled={loading} sx={{ py: 1.5, fontSize: "1rem" }}>
               {loading ? <CircularProgress size={24} color="inherit" /> : "Save Changes"}
+            </CustomButton>
+
+            {/* Logout */}
+            <CustomButton
+              type="button"
+              variant="outlined"
+              color="error"
+              onClick={handleLogout}
+            >
+              Logout
             </CustomButton>
           </Box>
         </form>

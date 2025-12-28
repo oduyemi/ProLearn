@@ -24,10 +24,11 @@ export interface UserContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   flashMessage: FlashMessage | null;
-  handleLogin: (email: string, password: string) => Promise<boolean>; 
+  handleLogin: (email: string, password: string) => Promise<boolean>;
   handleChangePassword: (oldPassword: string, newPassword: string) => Promise<void>;
   handleLogout: () => void;
 }
+
 
 export const UserContext = createContext<UserContextType | undefined>(
   undefined
@@ -37,17 +38,23 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
+
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [flashMessage, setFlashMessage] = useState<FlashMessage | null>(null);
+
   const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
+      return storedUser ? (JSON.parse(storedUser) as User) : null;
     }
     return null;
   });
 
-  const handleLogin = async (email: string, password: string): Promise<boolean> => {
+
+  const handleLogin = async (
+    email: string,
+    password: string
+  ): Promise<boolean> => {
     try {
       const response = await axios.post(
         "https://learnapi-pi.vercel.app/send/login",
@@ -55,7 +62,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       );
 
       if (response.status === 200) {
-        const { token, userSession } = response.data;
+        const { token, userSession } = response.data as {
+          token: string;
+          userSession: User;
+        };
 
         setUser(userSession);
         localStorage.setItem("token", token);
@@ -66,28 +76,21 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           message: `Login Successful. Welcome Back ${userSession.fname}`,
         });
 
-        return true; 
-      } else if (response.status === 400) {
-        setFlashMessage({
-          type: "error",
-          message: "All fields are required!",
-        });
-      } else {
-        setFlashMessage({
-          type: "error",
-          message: "An unexpected error occurred. Please try again later.",
-        });
+        return true;
       }
-    } catch (error: any) {
-      if (error.response) {
+
+      setFlashMessage({
+        type: "error",
+        message: "Invalid login credentials.",
+      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
         setFlashMessage({
           type: "error",
-          message: error.response.data.detail || error.response.data.message,
-        });
-      } else if (error.request) {
-        setFlashMessage({
-          type: "error",
-          message: "No response received from the server. Please try again later.",
+          message:
+            error.response?.data?.detail ||
+            error.response?.data?.message ||
+            "Login failed.",
         });
       } else {
         setFlashMessage({
@@ -96,8 +99,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         });
       }
     }
-    return false; // failed login
+
+    return false;
   };
+
+
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -105,9 +111,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setUser(null);
   };
 
-  const handleChangePassword = async (oldPassword: string, newPassword: string) => {
+
+  const handleChangePassword = async (
+    oldPassword: string,
+    newPassword: string
+  ): Promise<void> => {
     try {
       const token = localStorage.getItem("token");
+
       if (!token) {
         setFlashMessage({
           type: "error",
@@ -119,7 +130,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const response = await axios.put(
         "https://learnapi-pi.vercel.app/send/change-password",
         { oldPassword, newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.status === 200) {
@@ -130,14 +145,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       } else {
         setFlashMessage({
           type: "error",
-          message: response.data.message || "Password change failed.",
+          message: response.data?.message || "Password change failed.",
         });
       }
-    } catch (error: any) {
-      if (error.response) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
         setFlashMessage({
           type: "error",
-          message: error.response.data.message || "Error changing password.",
+          message:
+            error.response?.data?.message ||
+            "Error changing password.",
         });
       } else {
         setFlashMessage({
@@ -147,6 +164,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       }
     }
   };
+
 
   return (
     <UserContext.Provider

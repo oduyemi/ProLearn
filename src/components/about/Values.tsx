@@ -1,9 +1,8 @@
 "use client";
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import LightbulbIcon from "@mui/icons-material/Lightbulb";
-import GroupsIcon from "@mui/icons-material/Groups";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import { Lightbulb, Groups, TrendingUp } from "@mui/icons-material";
+
 
 export const Values: React.FC = () => {
   const values = [
@@ -11,19 +10,19 @@ export const Values: React.FC = () => {
       title: "Creativity",
       description:
         "We champion creativity and encourage our members to think outside the box. No two projects should be the same; we believe in the power of unique perspectives and original ideas.",
-      icon: <LightbulbIcon sx={{ fontSize: 28, color: "#6B21A8" }} />,
+      icon: <Lightbulb sx={{ fontSize: 28, color: "#6B21A8" }} />,
     },
     {
       title: "Collaboration",
       description:
         "Collaboration is at the core of what we do. We bring together individuals from diverse backgrounds and expertise, fostering a collaborative spirit that drives innovation and growth.",
-      icon: <GroupsIcon sx={{ fontSize: 28, color: "#6B21A8" }} />,
+      icon: <Groups sx={{ fontSize: 28, color: "#6B21A8" }} />,
     },
     {
       title: "Growth",
       description:
         "Continuous growth is essential. Whether it's through mentorship, projects, or community engagement, we are committed to helping our members grow both personally and professionally.",
-      icon: <TrendingUpIcon sx={{ fontSize: 28, color: "#6B21A8" }} />,
+      icon: <TrendingUp sx={{ fontSize: 28, color: "#6B21A8" }} />,
     },
   ];
 

@@ -3,7 +3,7 @@ import { Button as MUIButton, ButtonProps } from "@mui/material";
 
 type CustomButtonProps = {
   size?: "small" | "medium" | "large";
-  variant?: "yel" | "outline" | "whi";
+  variant?: "yel" | "outlined" | "whi";
   children: React.ReactNode;
 } & Omit<ButtonProps, "variant" | "size">;
 
@@ -21,7 +21,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
           color: "#000",
           "&:hover": { backgroundColor: "#EAB308" },
         };
-      case "outline":
+      case "outlined":
         return {
           border: "1px solid #EAB308", // yellow outline
           color: "#EAB308",
