@@ -97,7 +97,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const response = await axios.put(
         `https://learnapi-pi.vercel.app/auth/reset-password/${user.id}`,
         { oldPassword, newPassword, confirmNewPassword },
-        { withCredentials: true }
       );
 
       setFlashMessage({
@@ -123,7 +122,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const response = await axios.put(
         `https://learnapi-pi.vercel.app/auth/update-user/${user.id}`,
         data,
-        { withCredentials: true }
       );
 
       if (response.status === 200) {
