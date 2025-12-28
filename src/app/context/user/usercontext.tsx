@@ -46,27 +46,48 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const handleLogin = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await axios.post("https://learnapi-pi.vercel.app/auth/login", { email, password }, { withCredentials: true });
-
+      const response = await axios.post(
+        "https://learnapi-pi.vercel.app/auth/login",
+        { email, password } // no withCredentials
+      );
+  
       if (response.status === 200) {
-        const { userSession } = response.data as { userSession: User };
+        const { token, userSession } = response.data as {
+          token: string;
+          userSession: User;
+        };
+  
         setUser(userSession);
+        localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(userSession));
-
-        setFlashMessage({ type: "success", message: `Welcome back, ${userSession.fname}!` });
+  
+        setFlashMessage({
+          type: "success",
+          message: `Login Successful. Welcome Back ${userSession.fname}`,
+        });
+  
         return true;
       }
+  
+      setFlashMessage({ type: "error", message: "Invalid login credentials." });
     } catch (error: unknown) {
-      setFlashMessage({
-        type: "error",
-        message:
-          axios.isAxiosError(error)
-            ? error.response?.data?.message || "Login failed"
-            : "Something went wrong",
-      });
+      if (axios.isAxiosError(error)) {
+        setFlashMessage({
+          type: "error",
+          message:
+            error.response?.data?.message || "Login failed.",
+        });
+      } else {
+        setFlashMessage({
+          type: "error",
+          message: "Something went wrong.",
+        });
+      }
     }
+  
     return false;
   };
+  
 
 
   const handleLogout = async (): Promise<void> => {
@@ -94,9 +115,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         return;
       }
 
+      const token = localStorage.getItem("token");
       const response = await axios.put(
-        `https://learnapi-pi.vercel.app/auth/reset-password/${user.id}`,
-        { oldPassword, newPassword, confirmNewPassword },
+        `https://learnapi-pi.vercel.app/auth/reset-password/${user?.id}`,
+        { oldPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setFlashMessage({
