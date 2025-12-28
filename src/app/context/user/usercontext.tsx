@@ -90,18 +90,14 @@ const handleLogin = async (email: string, password: string): Promise<boolean> =>
   return false;
 };
 
-  
+  const handleLogout = async (): Promise<void> => {
+    setUser(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setFlashMessage({ type: "success", message: "Logged out successfully." });
+  };
 
 
-const handleLogout = async (): Promise<void> => {
-  setUser(null);
-  localStorage.removeItem("user");
-  localStorage.removeItem("token");
-  setFlashMessage({ type: "success", message: "Logged out successfully." });
-};
-
-
-  // ---------------- CHANGE PASSWORD ----------------
   const handleChangePassword = async (oldPassword: string, newPassword: string, confirmNewPassword: string): Promise<void> => {
     try {
       if (!user) {
@@ -127,7 +123,6 @@ const handleLogout = async (): Promise<void> => {
       });
     }
   };
-
 
   const handleUpdateProfile = async (data: Partial<User>): Promise<void> => {
     try {
