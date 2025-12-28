@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Header } from "@/components/navigation/Header";
-// import { Footer } from "@/components/navigation/Footer";
+import { Footer } from "@/components/navigation/Footer";
 
 
 
@@ -25,7 +25,7 @@ const ClientSideLayout = ({ children }: { children: React.ReactNode }) => {
       )}
       <main className="flex-1">{children}</main>
       {!isUserRoute && (
-        <Header />
+        <Footer />
       )}
     </>
   );
